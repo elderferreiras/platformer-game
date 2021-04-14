@@ -1,6 +1,6 @@
-import Phaser from "phaser";
+import Phaser from 'phaser';
 
-import "./index.css";
+import './index.css';
 
 import PlayScene from './scenes/Play';
 import PreloadScene from './scenes/Preload';
