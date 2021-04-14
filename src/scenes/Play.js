@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import Player from '../entities/Player';
+import Enemies from '../groups/Enemies';
+import { EnemyTypes, getEnemyTypes } from '../types';
 
 class Play extends Phaser.Scene {
   constructor(config) {
@@ -17,8 +19,13 @@ class Play extends Phaser.Scene {
     const layers = this.createLayers(map);
     const playerZones = this.getPlayerZones(layers.playerZones);
     const player = this.createPlayer(playerZones.start);
+    const enemies =  this.createEnemies(layers.enemySpawns);
     this.createPlayerColliders(player, { colliders: {
       platformColliders: layers.platformColliders,
+    }});
+    this.createEnemyColliders(enemies, { colliders: {
+      platformColliders: layers.platformColliders,
+      player,
     }});
     this.createEndOfLevel(playerZones.end, player);
     this.setupFollowUpCameraOn(player);
@@ -38,14 +45,25 @@ class Play extends Phaser.Scene {
     const environment = map.createStaticLayer('environment', tileset);
     const platforms = map.createStaticLayer('platforms', tileset);
     const playerZones = map.getObjectLayer('player_zones');
+    const enemySpawns = map.getObjectLayer('enemy_spawns');
 
     platformColliders.setCollisionByProperty({ collides: true });
 
-    return { platformColliders, environment, platforms, playerZones };
+    return { platformColliders, environment, platforms, playerZones, enemySpawns };
   }
 
   createPlayer(playerZones) {
     return new Player(this, playerZones.x, playerZones.y);
+  }
+
+  createEnemies(spawnLayer) {
+    const enemies = new Enemies(this);
+    const enemyTypes = enemies.getTypes();
+    spawnLayer.objects.map(spawnPoint => {
+      const enemy = new enemyTypes[spawnPoint.type](this, spawnPoint.x, spawnPoint.y);
+      enemies.add(enemy);
+    });
+    return enemies;
   }
 
   update(time, delta) {
@@ -54,6 +72,12 @@ class Play extends Phaser.Scene {
   createPlayerColliders(player, { colliders }) {
     player
       .addCollider(colliders.platformColliders);
+  }
+
+  createEnemyColliders(enemies, { colliders }) {
+    enemies
+      .addCollider(colliders.platformColliders)
+        .addCollider(colliders.player);
   }
 
   setupFollowUpCameraOn(player) {
