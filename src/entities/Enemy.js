@@ -8,6 +8,7 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
+    this.config = scene.config;
     // Mixins
     Object.assign(this, mixins);
 
@@ -54,8 +55,10 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.currentPatrolDistance = 0;
     }
 
-    this.rayGraphics.clear();
-    this.rayGraphics.strokeLineShape(ray);
+    if (this.config.debug) {
+      this.rayGraphics.clear();
+      this.rayGraphics.strokeLineShape(ray);
+    }
   }
 
   setPlatformColliders(platformColliders) {

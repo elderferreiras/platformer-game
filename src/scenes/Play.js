@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import Player from '../entities/Player';
 import Enemies from '../groups/Enemies';
-import { EnemyTypes, getEnemyTypes } from '../types';
 
 class Play extends Phaser.Scene {
   constructor(config) {
@@ -102,7 +101,11 @@ class Play extends Phaser.Scene {
   createEnemyColliders(enemies, { colliders }) {
     enemies
       .addCollider(colliders.platformColliders)
-        .addCollider(colliders.player);
+      .addCollider(colliders.player, this.onPlayerCollision);
+  }
+
+  onPlayerCollision(enemy, player) {
+    player.takesHit(enemy);
   }
 
   setupFollowUpCameraOn(player) {
