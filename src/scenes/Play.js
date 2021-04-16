@@ -19,16 +19,39 @@ class Play extends Phaser.Scene {
     const layers = this.createLayers(map);
     const playerZones = this.getPlayerZones(layers.playerZones);
     const player = this.createPlayer(playerZones.start);
-    const enemies =  this.createEnemies(layers.enemySpawns);
-    this.createPlayerColliders(player, { colliders: {
-      platformColliders: layers.platformColliders,
-    }});
-    this.createEnemyColliders(enemies, { colliders: {
-      platformColliders: layers.platformColliders,
-      player,
-    }});
+    const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
+    this.createPlayerColliders(player, {
+      colliders: {
+        platformColliders: layers.platformColliders,
+      }
+    });
+    this.createEnemyColliders(enemies, {
+      colliders: {
+        platformColliders: layers.platformColliders,
+        player,
+      }
+    });
     this.createEndOfLevel(playerZones.end, player);
     this.setupFollowUpCameraOn(player);
+  }
+
+  finishDrawing(pointer, layer) {
+    this.line.x2 = pointer.worldX;
+    this.line.y2 = pointer.worldY;
+    this.graphics.clear();
+    this.graphics.strokeLineShape(this.line);
+
+    this.tileHits = layer.getTilesWithinShape(this.line);
+
+    if (this.tileHits.length > 0) {
+      this.tileHits.forEach(tile => {
+        if (tile.index !== -1) {
+          tile.setCollision(true);
+        }
+      })
+    }
+
+    this.drawDebug(layer);
   }
 
   createMap() {
@@ -56,17 +79,19 @@ class Play extends Phaser.Scene {
     return new Player(this, playerZones.x, playerZones.y);
   }
 
-  createEnemies(spawnLayer) {
+  createEnemies(spawnLayer, platformLayer) {
     const enemies = new Enemies(this);
     const enemyTypes = enemies.getTypes();
-    spawnLayer.objects.map(spawnPoint => {
+    spawnLayer.objects.map((spawnPoint, i) => {
       const enemy = new enemyTypes[spawnPoint.type](this, spawnPoint.x, spawnPoint.y);
+      enemy.setPlatformColliders(platformLayer);
       enemies.add(enemy);
     });
     return enemies;
   }
 
   update(time, delta) {
+
   }
 
   createPlayerColliders(player, { colliders }) {
