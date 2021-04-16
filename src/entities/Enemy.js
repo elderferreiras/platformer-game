@@ -24,6 +24,7 @@ class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.maxPatrolDistance = 250;
     this.currentPatrolDistance = 0;
     this.platformCollidersLayer = null;
+    this.damage = 20;
     this.body.setGravityY(this.gravity);
     this.setSize(20, 45);
     this.setOffset(7, 20);

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import initAnimations from './anims/playerAnims';
 import collidable from '../mixins/collidable';
+import HealthBar from '../headsUpDisplay/HealthBar';
 
 class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
@@ -30,7 +31,8 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.consecutiveJumps = 1;
     this.hasBeenHit = false;
     this.bounceVelocity = 250;
-
+    this.health = 100;
+    this.hp = new HealthBar(this.scene, this.scene.config.leftTopCorner.x + 5, this.scene.config.leftTopCorner.y + 5, 3, this.health);
     this.cursors = this.scene.input.keyboard.createCursorKeys();
 
     initAnimations(this.scene.anims);
@@ -97,7 +99,11 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.hasBeenHit = true;
     this.bounceOff();
     const hitAnim = this.playDamageTween();
-    this.scene.time.delayedCall(2000, () => {
+
+    this.health -= initiator.damage;
+    this.hp.decrease(this.health);
+
+    this.scene.time.delayedCall(800, () => {
       this.hasBeenHit = false;
       hitAnim.stop();
       this.clearTint();
