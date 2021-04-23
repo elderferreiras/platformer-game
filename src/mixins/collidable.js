@@ -5,6 +5,10 @@ export default {
     this.scene.physics.add.collider(this, collider, callback, null, this);
     return this;
   },
+  addOverlap(collider, callback) {
+    this.scene.physics.add.overlap(this, collider, callback, null, this);
+    return this;
+  },
   bodyPositionDifferenceX: 0,
   prevRay: null,
   prevHasHit: null,
