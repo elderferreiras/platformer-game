@@ -5,6 +5,7 @@ import Enemies from '../groups/Enemies';
 import initAnims from '../anims'
 import Collectable from '../collectables/Collectable';
 import Collectables from '../groups/Collectables';
+import Hud from '../headsUpDisplay';
 
 class Play extends Phaser.Scene {
   constructor(config) {
@@ -29,11 +30,14 @@ class Play extends Phaser.Scene {
     const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
     const collectibles = this.createCollectibles(layers.collectibles);
 
+    this.createHud();
+
     this.createPlayerColliders(player, {
       colliders: {
         collectibles,
         platformColliders: layers.platformColliders,
         projectiles: enemies.getAllProjectiles(),
+        traps: layers.traps,
       }
     });
     this.createEnemyColliders(enemies, {
@@ -54,16 +58,22 @@ class Play extends Phaser.Scene {
     return map;
   }
 
+  createHud() {
+    this.hud = new Hud(this, 0, 0);
+  }
+
   createLayers(map) {
     const tileset = map.getTileset('main_lev_build_1');
     const platformColliders = map.createStaticLayer('platforms_colliders', tileset);
     const environment = map.createStaticLayer('environment', tileset).setDepth(-2);
     const platforms = map.createStaticLayer('platforms', tileset);
+    const traps = map.createStaticLayer('traps', tileset);
     const playerZones = map.getObjectLayer('player_zones');
     const enemySpawns = map.getObjectLayer('enemy_spawns');
     const collectibles = map.getObjectLayer('collectables');
 
     platformColliders.setCollisionByProperty({ collides: true });
+    traps.setCollisionByExclusion(-1);
 
     return {
       collectibles,
@@ -72,6 +82,7 @@ class Play extends Phaser.Scene {
       platforms,
       playerZones,
       enemySpawns,
+      traps,
     };
   }
 
@@ -105,18 +116,20 @@ class Play extends Phaser.Scene {
   createPlayerColliders(player, { colliders }) {
     player
       .addCollider(colliders.platformColliders)
-      .addCollider(colliders.projectiles, this.onWeaponHit)
+      .addCollider(colliders.projectiles, this.onHit)
+      .addCollider(colliders.traps, this.onHit)
       .addOverlap(colliders.collectibles, this.onCollect, this);
   }
 
   onCollect(entity, collectable) {
     this.score += collectable.score;
+    this.hud.updateScoreBoard(this.score);
     // true: deactivate the object
     // true: hide game object
     collectable.disableBody(true, true);
   }
 
-  onWeaponHit(entity, source) {
+  onHit(entity, source) {
     entity.takesHit(source);
   }
 
@@ -124,8 +137,8 @@ class Play extends Phaser.Scene {
     enemies
       .addCollider(colliders.platformColliders)
       .addCollider(colliders.player, this.onPlayerCollision)
-      .addCollider(colliders.player.projectiles, this.onWeaponHit)
-      .addOverlap(colliders.player.meeleWeapon, this.onWeaponHit);
+      .addCollider(colliders.player.projectiles, this.onHit)
+      .addOverlap(colliders.player.meeleWeapon, this.onHit);
   }
 
   onPlayerCollision(enemy, player) {
