@@ -3,7 +3,10 @@ import Phaser from 'phaser';
 import './index.css';
 
 import PlayScene from './scenes/Play';
+import MenuScene from './scenes/Menu';
 import PreloadScene from './scenes/Preload';
+import LevelsScene from './scenes/Levels';
+import CreditScene from './scenes/Credit';
 
 const isMobile = screen.width <= 480;
 const scaleSettings = isMobile ? {
@@ -12,10 +15,10 @@ const scaleSettings = isMobile ? {
     autoCenter: Phaser.Scale.CENTER_BOTH
   }
 } : {};
-const ZOOM_FACTOR = 1.5;
+const ZOOM_FACTOR = 2;
 const MAP_WIDTH = 1600;
 const WIDTH = document.body.offsetWidth;
-const HEIGHT = 600;
+const HEIGHT = 640;
 const SHARED_CONFIG = {
   mapOffset: MAP_WIDTH > WIDTH ? MAP_WIDTH - WIDTH : 0,
   width: WIDTH,
@@ -29,10 +32,15 @@ const SHARED_CONFIG = {
   rightTopCorner: {
     x: WIDTH / ZOOM_FACTOR + (WIDTH - (WIDTH / ZOOM_FACTOR )) / 2,
     y: (HEIGHT - (HEIGHT / ZOOM_FACTOR )) / 2,
-  }
+  },
+  rightBottomCorner: {
+    x: WIDTH / ZOOM_FACTOR + (WIDTH - (WIDTH / ZOOM_FACTOR )) / 2,
+    y: (HEIGHT / ZOOM_FACTOR) + ((HEIGHT - (HEIGHT / ZOOM_FACTOR)) / 2),
+  },
+  lastLevel: 2,
 };
 
-const scenes = [PreloadScene, PlayScene];
+const scenes = [PreloadScene, MenuScene, PlayScene, LevelsScene, CreditScene];
 const createScene = Scene => new Scene(SHARED_CONFIG);
 const initScenes = () => scenes.map(createScene);
 

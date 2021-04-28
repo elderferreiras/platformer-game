@@ -6,7 +6,8 @@ class Preload extends Phaser.Scene {
   }
 
   preload() {
-    this.load.tilemapTiledJSON('map', 'assets/crystal_world_map.json');
+    this.load.tilemapTiledJSON('level_1', 'assets/crystal_world_map_level_1.json');
+    this.load.tilemapTiledJSON('level_2', 'assets/crystal_world_map_level_2.json');
     this.load.image('tiles-1', 'assets/main_lev_build_1.png');
     this.load.image('tiles-2', 'assets/main_lev_build_2.png');
     this.load.image('iceball-1', 'assets/weapons/iceball_001.png');
@@ -21,6 +22,12 @@ class Preload extends Phaser.Scene {
     this.load.image('diamond-4', 'assets/collectibles/diamond_big_04.png');
     this.load.image('diamond-5', 'assets/collectibles/diamond_big_05.png');
     this.load.image('diamond-6', 'assets/collectibles/diamond_big_06.png');
+    this.load.image('bg-spikes-dark', 'assets/background03_super_dark.png');
+    this.load.image('bg-spikes-dark', 'assets/background03_super_dark.png');
+    this.load.image('sky-play', 'assets/background_0.png');
+    this.load.image('bg-spikes-tileset', 'assets/bg_spikes_tileset.png');
+    this.load.image('menu-bg', 'assets/background01.png');
+    this.load.image('back', 'assets/back.png');
 
     this.load.spritesheet('player', 'assets/player/move_sprite_1.png',{
       frameWidth: 32,
@@ -62,10 +69,23 @@ class Preload extends Phaser.Scene {
       frameHeight: 32,
       spacing: 16,
     });
+
+    this.load.audio('theme', 'assets/music/theme_music.wav');
+    this.load.audio('projectile-attack', 'assets/music/projectile_launch.wav');
+    this.load.audio('step', 'assets/music/step_mud.wav');
+    this.load.audio('jump', 'assets/music/jump.wav');
+    this.load.audio('swipe', 'assets/music/swipe.wav');
+    this.load.audio('coin-pickup', 'assets/music/coin_pickup.wav');
+
+    this.load.once('complete', () => {
+      this.startGame();
+    })
   }
 
-  create() {
-    this.scene.start('PlayScene');
+  startGame() {
+    this.registry.set('level', 1);
+    this.registry.set('unlocked-levels', 1);
+    this.scene.start('MenuScene');
   }
 }
 

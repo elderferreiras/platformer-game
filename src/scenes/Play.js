@@ -3,8 +3,8 @@ import Player from '../entities/Player';
 import Enemies from '../groups/Enemies';
 
 import initAnims from '../anims'
-import Collectable from '../collectables/Collectable';
 import Collectables from '../groups/Collectables';
+import EventEmitter from '../events/Emitter';
 import Hud from '../headsUpDisplay';
 
 class Play extends Phaser.Scene {
@@ -18,7 +18,7 @@ class Play extends Phaser.Scene {
     this.load.image('sky', 'assets/sky.png')
   }
 
-  create() {
+  create({ gameStatus }) {
     this.score = 0;
     const map = this.createMap();
 
@@ -29,9 +29,9 @@ class Play extends Phaser.Scene {
     const player = this.createPlayer(playerZones.start);
     const enemies = this.createEnemies(layers.enemySpawns, layers.platformColliders);
     const collectibles = this.createCollectibles(layers.collectibles);
-
+    this.createBackground(map);
     this.createHud();
-
+    this.playThemeMusic();
     this.createPlayerColliders(player, {
       colliders: {
         collectibles,
@@ -46,15 +46,47 @@ class Play extends Phaser.Scene {
         player,
       }
     });
+    this.createBackButton();
     this.createEndOfLevel(playerZones.end, player);
     this.setupFollowUpCameraOn(player);
+
+
+    this.collectSound = this.sound.add('coin-pickup', { volume: 1 / 100 });
+
+    if (gameStatus === 'PLAYER_LOST') {
+      return;
+    }
+    this.createGameEvents();
+  }
+
+  getCurrentLevel() {
+    return this.registry.get('level') || 1;
+  }
+
+  createBackButton() {
+    const btn = this.add.image(this.config.rightBottomCorner.x, this.config.rightBottomCorner.y, 'back')
+      .setOrigin(1)
+      .setScrollFactor(0)
+      .setScale(2)
+      .setInteractive();
+
+    btn.on('pointerup', () => {
+      this.scene.start('MenuScene');
+    })
+  }
+
+  createGameEvents() {
+    EventEmitter.on('PLAYER_LOST', () => {
+      this.scene.restart({ gameStatus: 'PLAYER_LOST'});
+    })
   }
 
   createMap() {
     const map = this.make.tilemap({
-      key: 'map',
+      key: `level_${this.getCurrentLevel()}`,
     });
     map.addTilesetImage('main_lev_build_1', 'tiles-1');
+    map.addTilesetImage('bg_spikes_tileset', 'bg-spikes-tileset');
     return map;
   }
 
@@ -64,6 +96,8 @@ class Play extends Phaser.Scene {
 
   createLayers(map) {
     const tileset = map.getTileset('main_lev_build_1');
+    const tilesetBg = map.getTileset('bg_spikes_tileset');
+    const distance = map.createStaticLayer('distance', tilesetBg).setDepth(-12);
     const platformColliders = map.createStaticLayer('platforms_colliders', tileset);
     const environment = map.createStaticLayer('environment', tileset).setDepth(-2);
     const platforms = map.createStaticLayer('platforms', tileset);
@@ -84,6 +118,19 @@ class Play extends Phaser.Scene {
       enemySpawns,
       traps,
     };
+  }
+
+  createBackground(map) {
+    const bgObject = map.getObjectLayer('distance_bg').objects[0];
+    this.spikesImage = this.add.tileSprite(bgObject.x, bgObject.y, this.config.width, this.config.height, 'bg-spikes-dark')
+      .setOrigin(0, 1)
+      .setDepth(-10)
+      .setScrollFactor(0, 1);
+    this.skyImage = this.add.tileSprite(0, 0, this.config.width, 180, 'sky-play')
+      .setOrigin(0, 0)
+      .setDepth(-11)
+      .setScale(1.1)
+      .setScrollFactor(0, 1);
   }
 
   createPlayer(playerZones) {
@@ -109,10 +156,6 @@ class Play extends Phaser.Scene {
     return collectables;
   }
 
-  update(time, delta) {
-
-  }
-
   createPlayerColliders(player, { colliders }) {
     player
       .addCollider(colliders.platformColliders)
@@ -126,6 +169,7 @@ class Play extends Phaser.Scene {
     this.hud.updateScoreBoard(this.score);
     // true: deactivate the object
     // true: hide game object
+    this.collectSound.play();
     collectable.disableBody(true, true);
   }
 
@@ -169,10 +213,29 @@ class Play extends Phaser.Scene {
 
     const eolOverlap = this.physics.add.overlap(player, endOfLevel, () => {
       eolOverlap.active = false;
-      console.log('Player has won!');
+
+      if (this.registry.get('level') === this.config.lastLevel) {
+        this.scene.start('CreditScene');
+        return;
+      }
+
+      this.registry.inc('level', 1);
+      this.registry.inc('unlocked-levels', 1);
+      this.scene.restart({ gameStatus: 'LEVEL_COMPLETED' });
     });
   }
 
+  playThemeMusic() {
+    if (this.sound.get('theme')) {
+      return;
+    }
+    this.sound.add('theme', { loop: true, volume: 1 / 100 }).play();
+  }
+
+  update(time, delta) {
+    this.spikesImage.tilePositionX = this.cameras.main.scrollX * 0.3;
+    this.skyImage.tilePositionX = this.cameras.main.scrollX * 0.1;
+  }
 }
 
 export default Play;
