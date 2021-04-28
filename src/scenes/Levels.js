@@ -7,6 +7,7 @@ class LevelsScene extends BaseScene {
 
   create() {
     super.create();
+    this.createOverlay();
 
     this.menu = [];
     const levels = this.registry.get('unlocked-levels');
